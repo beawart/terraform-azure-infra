@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "tfstate" {
 }
 
 resource "azurerm_storage_account" "tfstate" {
-  name                            = "tfstateaccount123" # must be globally unique
+  name                            = "tfstateaccount-beawart" # must be globally unique
   resource_group_name             = azurerm_resource_group.tfstate.name
   location                        = azurerm_resource_group.tfstate.location
   account_tier                    = "Standard"
