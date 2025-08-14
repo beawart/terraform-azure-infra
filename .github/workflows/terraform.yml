@@ -10,10 +10,10 @@ jobs:
     environment: production
 
     env:
-      AZURECLIENT_ID: ${{ secrets.AZURECLIENT_ID }}
-      AZURECLIENT_SECRET: ${{ secrets.AZURECLIENT_SECRET }}
-      AZURETENANT_ID: ${{ secrets.AZURETENANT_ID }}
-      AZURESUBSCRIPTION_ID: ${{ secrets.AZURESUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: 🧾 Checkout code
@@ -27,9 +27,9 @@ jobs:
       - name: 📦 Azure CLI Login
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURECLIENT_ID }}
-          tenant-id: ${{ secrets.AZURETENANT_ID }}
-          subscription-id: ${{ secrets.AZURESUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           allow-no-subscriptions: true
 
       - name: 🏗️ Bootstrap Terraform State Storage
