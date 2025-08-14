@@ -1,0 +1,54 @@
+name: Terraform Azure Deployment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Terraform Workflow
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: 📦 Azure CLI Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          allow-no-subscriptions: true
+
+      - name: 🏗️ Bootstrap Terraform State Storage
+        run: |
+          az group create --name tfstate-rg --location australiaeast
+          az storage account create --name tfstateaccount-beawart --resource-group tfstate-rg --location australiaeast --sku Standard_LRS
+          az storage container create --name tfstate --account-name tfstateaccount-beawart
+
+      - name: 📦 Terraform Init with Backend
+        run: terraform init
+
+      - name: 🧪 Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: ✅ Wait for Approval
+        uses: hmarr/auto-approve-action@v3
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🚀 Terraform Apply
+        run: terraform apply -auto-approve tfplan
