@@ -12,20 +12,19 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
 jobs:
-  init:
+  terraform-init:
     name: Terraform Init
     runs-on: ubuntu-latest
-    environment: production
-
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
@@ -36,50 +35,61 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-  plan:
+      - name: Upload Terraform Init Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-init
+          path: |
+            .terraform/
+            .terraform.lock.hcl
+
+  terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-    environment: production
-    needs: init
-
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    needs: terraform-init
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
+
+      - name: Download Terraform Init Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-init
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-  apply:
+      - name: Upload Plan File
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: tfplan
+
+  terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
-    environment: production
-    needs: plan
-
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    needs: terraform-plan
+    if: github.ref == 'refs/heads/main' # Only apply on main branch
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
+
+      - name: Download Plan File
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
