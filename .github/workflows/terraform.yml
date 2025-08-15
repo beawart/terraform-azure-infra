@@ -3,15 +3,18 @@ name: Terraform Azure Deployment
 on:
   push:
     branches:
-      - "main"
+      - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
-  id-token: write
   contents: read
+  id-token: write
 
 jobs:
-  terraform:
-    name: Terraform Workflow
+  init:
+    name: Terraform Init
     runs-on: ubuntu-latest
     environment: production
 
@@ -22,42 +25,61 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
-      - name: 🧾 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: 🔧 Setup Terraform
+      - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
 
-      - name: 📦 Azure CLI Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: 🏗️ Bootstrap Terraform State Storage
-        run: |
-          az group create --name tfstate-rg --location australiaeast
-          az storage account create --name tfstateaccountbeawart --resource-group tfstate-rg --location australiaeast --sku Standard_LRS
-          az storage container create --name tfstate --account-name tfstateaccountbeawart
-
-      - name: 📦 Terraform Init with Backend
+      - name: Terraform Init
         run: terraform init
-        env:
-          TF_LOG: DEBUG
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: 🧪 Terraform Plan
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    environment: production
+    needs: init
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      - name: ✅ Wait for Approval
-        uses: hmarr/auto-approve-action@v3
-        if: github.event_name == 'workflow_dispatch'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+  apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: production
+    needs: plan
 
-      - name: 🚀 Terraform Apply
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
