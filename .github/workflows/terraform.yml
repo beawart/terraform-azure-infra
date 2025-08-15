@@ -1,17 +1,15 @@
-name: Terraform CI/CD
+name: Terraform Pipeline
 
 on:
   push:
     branches:
       - main
   pull_request:
-
 env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
 jobs:
   terraform-init:
     name: Terraform Init
@@ -19,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
 
@@ -34,8 +32,8 @@ jobs:
         with:
           name: terraform-init
           path: |
-            .terraform/
-            .terraform.lock.hcl
+            .
+            !.git/
 
   terraform-plan:
     name: Terraform Plan
@@ -44,46 +42,48 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.0
+        uses: actions/checkout@v4
 
       - name: Download Terraform Init Artifacts
         uses: actions/download-artifact@v4
         with:
           name: terraform-init
+          path: .
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
       - name: Terraform Plan
         run: terraform plan -out=tfplan
 
-      - name: Upload Plan File
+      - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan
+          name: terraform-plan
           path: tfplan
 
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: terraform-plan
-    if: github.ref == 'refs/heads/main' # Only apply on main branch
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.6.0
-
-      - name: Download Plan File
+      - name: Download Plan Artifact
         uses: actions/download-artifact@v4
         with:
-          name: tfplan
+          name: terraform-plan
+          path: .
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
