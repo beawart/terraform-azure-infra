@@ -1,7 +1,9 @@
 name: Terraform Azure Deployment
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - "main"
 
 permissions:
   id-token: write
@@ -41,8 +43,8 @@ jobs:
       - name: 🏗️ Bootstrap Terraform State Storage
         run: |
           az group create --name tfstate-rg --location australiaeast
-          az storage account create --name tfstateaccount15082025beawart --resource-group tfstate-rg --location australiaeast --sku Standard_LRS
-          az storage container create --name tfstate --account-name tfstateaccount15082025beawart
+          az storage account create --name tfstateaccountbeawart --resource-group tfstate-rg --location australiaeast --sku Standard_LRS
+          az storage container create --name tfstate --account-name tfstateaccountbeawart
 
       - name: 📦 Terraform Init with Backend
         run: terraform init
