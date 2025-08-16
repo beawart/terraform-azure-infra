@@ -74,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: terraform-plan
     if: github.ref == 'refs/heads/main'
+    environment:
+      name: production # 👈 triggers manual approval
 
     steps:
       - name: Checkout Code

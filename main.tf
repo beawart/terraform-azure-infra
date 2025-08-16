@@ -1,7 +1,7 @@
 module "storage_ingress_alert" {
   source              = "./azure-metric-alert"
   alert_name          = "storage-ingress-alert"
-  resource_group_name = "my-storage-rg"
+  resource_group_name = "tfstate-rg"
   target_resource_id  = "/subscriptions/3ff211f1-4d5d-4ed8-b3fc-858378f20b7d/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
   metric_namespace    = "Microsoft.Storage/storageAccounts"
   metric_name         = "Ingress"
