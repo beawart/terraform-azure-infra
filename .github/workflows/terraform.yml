@@ -81,7 +81,7 @@ jobs:
       - name: Check for Changes
         id: check-plan
         run: |
-          if grep -q "No changes. Infrastructure is up-to-date." plan_output.txt; then
+          if grep -iq "no changes" plan_output.txt; then
             echo "No changes detected."
             echo "changes=false" >> $GITHUB_OUTPUT
           else
