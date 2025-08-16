@@ -69,6 +69,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
+      - name: Terraform Init
+        run: terraform init -reconfigure
       - name: Terraform Plan
         run: |
           terraform plan -out=tfplan
@@ -119,6 +121,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
+      - name: Terraform Init
+        run: terraform init -reconfigure
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
       - name: ✅ Apply Summary
