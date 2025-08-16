@@ -83,12 +83,13 @@ jobs:
       - name: Check for Changes
         id: check-plan
         run: |
-          if grep -iq "no changes" plan_output.txt; then
+          if grep -Eiq "no changes|no actions|up-to-date" plan_output.txt; then
             echo "No changes detected."
             echo "changes=false" >> $GITHUB_OUTPUT
           else
             echo "Changes detected."
             echo "changes=true" >> $GITHUB_OUTPUT
+          fi
       - name: Comment Plan Summary on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
