@@ -5,7 +5,7 @@ on:
     branches:
       - main
   pull_request:
-  workflow_dispatch: # 👈 Enables manual destroy trigger
+  workflow_dispatch:
     inputs:
       confirm:
         description: 'Type "destroy" to confirm'
@@ -18,29 +18,39 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+      - name: Validate Terraform
+        run: terraform validate
+      - name: ✅ Validation Summary
+        run: echo "Terraform configuration validated successfully." >> $GITHUB_STEP_SUMMARY
+
   terraform-init:
     name: Terraform Init
     runs-on: ubuntu-latest
-
+    needs: terraform-validate
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-
       - name: Terraform Init
-        run: terraform init
-
-      - name: Upload Terraform Init Artifacts
+        run: terraform init -reconfigure
+      - name: Upload Init Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: terraform-init
           path: |
             .
             !.git/
+      - name: ✅ Init Summary
+        run: echo "Terraform initialized and artifacts uploaded." >> $GITHUB_STEP_SUMMARY
 
   terraform-plan:
     name: Terraform Plan
@@ -48,36 +58,24 @@ jobs:
     needs: terraform-init
     outputs:
       changes_detected: ${{ steps.check-plan.outputs.changes }}
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download Terraform Init Artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: terraform-init
           path: .
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-
-      - name: Reinitialize Backend
-        run: terraform init -reconfigure
-
       - name: Terraform Plan
         run: |
           terraform plan -out=tfplan
           terraform show -no-color tfplan > plan_output.txt
-
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
           path: tfplan
-
       - name: Check for Changes
         id: check-plan
         run: |
@@ -87,55 +85,67 @@ jobs:
           else
             echo "Changes detected."
             echo "changes=true" >> $GITHUB_OUTPUT
-          fi
+      - name: Comment Plan Summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('plan_output.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `### Terraform Plan Summary\n\`\`\`\n${plan}\n\`\`\``
+            });
+      - name: ✅ Plan Summary
+        run: echo "Terraform plan completed. Changes detected ${{ steps.check-plan.outputs.changes }}" >> $GITHUB_STEP_SUMMARY
 
   terraform-apply:
     name: Terraform Apply
     runs-on: ubuntu-latest
     needs: terraform-plan
-    if: github.ref == 'refs/heads/main' && needs.terraform-plan.outputs.changes_detected == 'true' # 👈 Only run if changes exist
+    if: github.ref == 'refs/heads/main' && needs.terraform-plan.outputs.changes_detected == 'true'
     environment:
-      name: production # 👈 triggers manual approval
-
+      name: production
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Download Plan Artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
         with:
           name: terraform-plan
           path: .
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-
-      - name: Reinitialize Backend
-        run: terraform init -reconfigure
-
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
+      - name: ✅ Apply Summary
+        run: echo "Terraform apply executed successfully." >> $GITHUB_STEP_SUMMARY
+
+  apply-skipped:
+    name: Apply Skipped Notice
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    if: needs.terraform-plan.outputs.changes_detected == 'false'
+    steps:
+      - name: Log Skipped Apply
+        run: |
+          echo "Terraform apply skipped: No infrastructure changes detected." >> $GITHUB_STEP_SUMMARY
 
   terraform-destroy:
     name: Terraform Destroy
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'destroy' # 👈 Only runs when manually triggered
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'destroy'
     environment:
-      name: production # 👈 Optional: add approval gate
-
+      name: production
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-
       - name: Terraform Init
         run: terraform init -reconfigure
-
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
+      - name: ⚠️ Destroy Summary
+        run: echo "Terraform destroy executed manually." >> $GITHUB_STEP_SUMMARY
