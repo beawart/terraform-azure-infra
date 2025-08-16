@@ -68,7 +68,9 @@ jobs:
         run: terraform init -reconfigure
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
+        run: |
+          terraform plan -out=tfplan
+          terraform show -no-color tfplan > plan_output.txt
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
