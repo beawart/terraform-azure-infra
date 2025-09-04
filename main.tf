@@ -1,5 +1,5 @@
 module "storage_ingress_alert" {
-  source              = "https://github.com/beawart/azure-monitoring-kit-community/tree/feature/tb/InitialUpdates/modules/baseline"
+  source              = "github.com/beawart/azure-monitoring-kit-community//modules/baseline?ref=feature/tb/InitialUpdates"
   alert_name          = "storage-ingress-alert"
   resource_group_name = "tfstate-rg"
   target_resource_id  = "/subscriptions/3ff211f1-4d5d-4ed8-b3fc-858378f20b7d/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
