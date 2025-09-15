@@ -7,9 +7,16 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      confirm:
-        description: 'Type "destroy" to confirm'
+      action:
+        description: 'Select the pipeline action to run'
         required: true
+        type: choice
+        options:
+          - plan-apply
+          - destroy
+      confirm_destroy:
+        description: 'Type YES to confirm destroy (only required if action=destroy)'
+        required: false
 
 env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -18,15 +25,41 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
+  # -------------------------
+  # META JOB - ALWAYS FIRST
+  # -------------------------
+  pipeline-start:
+    name: 🚦 Pipeline Start
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show Selected Action
+        run: |
+          echo "### 🚀 Terraform Pipeline Starting" >> $GITHUB_STEP_SUMMARY
+          echo "Triggered by: ${{ github.triggering_actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "Event: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Selected Action: **${{ github.event.inputs.action }}**" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ github.event.inputs.action }}" = "destroy" ]; then
+              echo "Destroy Confirmation: **${{ github.event.inputs.confirm_destroy }}**" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "Selected Action: plan-apply (auto-triggered)" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # -------------------------
+  # PLAN/APPLY CHAIN
+  # -------------------------
   terraform-validate:
     name: Terraform Validate
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply'
     runs-on: ubuntu-latest
+    needs: pipeline-start
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.6.0
-      - name: Terraform Init
+      - name: Terraform Init (Backend Disabled)
         run: terraform init -backend=false
       - name: Validate Terraform
         run: terraform validate
@@ -35,6 +68,7 @@ jobs:
 
   terraform-init:
     name: Terraform Init
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply'
     runs-on: ubuntu-latest
     needs: terraform-validate
     steps:
@@ -56,6 +90,7 @@ jobs:
 
   terraform-plan:
     name: Terraform Plan
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply'
     runs-on: ubuntu-latest
     needs: terraform-init
     outputs:
@@ -84,10 +119,8 @@ jobs:
         id: check-plan
         run: |
           if grep -Eiq "no changes|no actions|up-to-date" plan_output.txt; then
-            echo "No changes detected."
             echo "changes=false" >> $GITHUB_OUTPUT
           else
-            echo "Changes detected."
             echo "changes=true" >> $GITHUB_OUTPUT
           fi
       - name: Comment Plan Summary on PR
@@ -108,9 +141,11 @@ jobs:
 
   terraform-apply:
     name: Terraform Apply
+    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply') &&
+        github.ref == 'refs/heads/main' &&
+        needs.terraform-plan.outputs.changes_detected == 'true'
     runs-on: ubuntu-latest
     needs: terraform-plan
-    if: github.ref == 'refs/heads/main' && needs.terraform-plan.outputs.changes_detected == 'true'
     environment:
       name: production
     steps:
@@ -131,18 +166,24 @@ jobs:
 
   apply-skipped:
     name: Apply Skipped Notice
+    if: (github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply') &&
+        needs.terraform-plan.outputs.changes_detected == 'false'
     runs-on: ubuntu-latest
     needs: terraform-plan
-    if: needs.terraform-plan.outputs.changes_detected == 'false'
     steps:
       - name: Log Skipped Apply
-        run: |
-          echo "Terraform apply skipped: No infrastructure changes detected." >> $GITHUB_STEP_SUMMARY
+        run: echo "Terraform apply skipped: No infrastructure changes detected." >> $GITHUB_STEP_SUMMARY
 
+  # -------------------------
+  # DESTROY CHAIN
+  # -------------------------
   terraform-destroy:
     name: Terraform Destroy
+    if: github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.action == 'destroy' &&
+        github.event.inputs.confirm_destroy == 'YES'
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'destroy'
+    needs: pipeline-start
     environment:
       name: production
     steps:
@@ -156,3 +197,14 @@ jobs:
         run: terraform destroy -auto-approve
       - name: ⚠️ Destroy Summary
         run: echo "Terraform destroy executed manually." >> $GITHUB_STEP_SUMMARY
+
+  destroy-skipped:
+    name: Destroy Skipped Notice
+    if: github.event_name == 'workflow_dispatch' &&
+        github.event.inputs.action == 'destroy' &&
+        github.event.inputs.confirm_destroy != 'YES'
+    runs-on: ubuntu-latest
+    needs: pipeline-start
+    steps:
+      - name: Log Destroy Skipped
+        run: echo "⚠️ Destroy skipped: Confirmation string not provided or incorrect." >> $GITHUB_STEP_SUMMARY
