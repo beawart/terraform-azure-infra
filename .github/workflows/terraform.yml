@@ -123,6 +123,7 @@ jobs:
           else
             echo "changes=true" >> $GITHUB_OUTPUT
           fi
+
       - name: Comment Plan Summary on PR
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -136,8 +137,12 @@ jobs:
               repo: context.repo.repo,
               body: `### Terraform Plan Summary\n\`\`\`\n${plan}\n\`\`\``
             });
+
       - name: ✅ Plan Summary
-        run: echo "Terraform plan completed. Changes detected ${{ steps.check-plan.outputs.changes }}" >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "### Terraform Plan Output" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat plan_output.txt >> $GITHUB_STEP_SUMMARY
 
   terraform-apply:
     name: Terraform Apply
