@@ -7,7 +7,6 @@
 
 
 module "storage_baseline_alerts" {
-  #source              = "git::https://github.com/org/terraform-azure-baseline-alerts.git//modules/baseline-alerts"
   source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/baseline-alerts?ref=feature/tb/InitialUpdates"
   resource_group_name = "tfstate-rg"
   target_resource_ids = [
@@ -25,6 +24,10 @@ module "storage_baseline_alerts" {
     }
     availability = {
       enabled = false # disable this baseline alert for this deployment
+    }
+    network_rule_change = {
+      enabled  = true
+      severity = 1
     }
   }
 }
