@@ -7,7 +7,7 @@
 
 
 module "storage_baseline_alerts" {
-  source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/baseline-alerts?ref=feature/tb/InitialUpdates"
+  source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/st-baseline-alerts"
   resource_group_name = "tfstate-rg"
   target_resource_ids = [
     "/subscriptions/3ff211f1-4d5d-4ed8-b3fc-858378f20b7d/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
