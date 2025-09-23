@@ -166,6 +166,8 @@ jobs:
       - name: Terraform Init
         run: terraform init -reconfigure
       - name: Terraform Apply
+        env:
+          TF_VAR_admin_password: ${{ secrets.ADMIN_PASSWORD }}
         run: terraform apply -auto-approve tfplan
       - name: ✅ Apply Summary
         run: echo "Terraform apply executed successfully." >> $GITHUB_STEP_SUMMARY
