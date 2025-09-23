@@ -4,7 +4,7 @@ module "baseline_health_alerts" {
   target_resource_ids = [
     "/subscriptions/3ff211f1-4d5d-4ed8-b3fc-858378f20b7d/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
   ]
-  resource_type    = "storage_account"
+  # resource_type    = "storage_account"
   action_group_ids = ["/subscriptions/3ff211f1-4d5d-4ed8-b3fc-858378f20b7d/resourceGroups/tfstate-rg/providers/microsoft.insights/actiongroups/ag-taha-email"]
   tags             = { environment = "prod" }
 
