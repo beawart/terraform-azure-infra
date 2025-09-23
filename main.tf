@@ -1,5 +1,5 @@
-module "storage_baseline_alerts" {
-  source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/st-baseline-alerts"
+module "baseline_health_alerts" {
+  source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/baseline-health"
   resource_group_name = "tfstate-rg"
   target_resource_ids = [
     "/subscriptions/3ff211f1-4d5d-4ed8-b3fc-858378f20b7d/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
@@ -15,11 +15,7 @@ module "storage_baseline_alerts" {
       window_size = "PT12H"
     }
     availability = {
-      enabled = false # disable this baseline alert for this deployment
-    }
-    network_rule_change = {
-      enabled  = true
-      severity = 1
+      enabled = true # disable this baseline alert for this deployment
     }
   }
 }
