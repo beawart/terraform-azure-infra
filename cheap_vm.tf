@@ -1,10 +1,4 @@
 
-variable "admin_password" {
-  description = "Admin password for the VM"
-  type        = string
-  sensitive   = true
-}
-
 resource "azurerm_resource_group" "rg" {
   name     = "cheap-vm-rg"
   location = "Central India" # Cheapest region as of Sep 2025
