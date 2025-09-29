@@ -18,9 +18,6 @@ on:
         description: "Type YES to confirm destroy (only required if action=destroy)"
         required: false
 
-env:
-  TF_VAR_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
 jobs:
   # -------------------------
   # META JOB
@@ -109,6 +106,7 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       TF_VAR_admin_password: ${{ secrets.ADMIN_PASSWORD }}
     outputs:
       changes_detected: ${{ steps.check-plan.outputs.changes }}
@@ -154,6 +152,7 @@ jobs:
       ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       TF_VAR_admin_password: ${{ secrets.ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
