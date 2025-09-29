@@ -71,7 +71,7 @@ jobs:
     name: Terraform Init
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ci
     needs: terraform-validate
     steps:
       - uses: actions/checkout@v4
@@ -94,7 +94,7 @@ jobs:
     name: Terraform Plan
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.action == 'plan-apply'
     runs-on: ubuntu-latest
-    environment: production
+    environment: ci
     needs: terraform-init
     outputs:
       changes_detected: ${{ steps.check-plan.outputs.changes }}
