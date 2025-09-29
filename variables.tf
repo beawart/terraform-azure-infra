@@ -3,3 +3,9 @@ variable "admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "subscription_id" {
+  description = "Subscription ID value"
+  type        = string
+  sensitive   = true
+}

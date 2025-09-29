@@ -2,7 +2,7 @@ module "baseline_health_alerts-StorageAccount" {
   source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/baseline-health"
   resource_group_name = "tfstate-rg"
   target_resource_ids = [
-    "/subscriptions/" + var.admin_password + "/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
+    "/subscriptions/${var.subscription_id}/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
   ]
   resource_type    = "storage_account"
   action_group_ids = ["/subscriptions/secrets.AZURE_SUBSCRIPTION_ID/resourceGroups/tfstate-rg/providers/microsoft.insights/actiongroups/ag-taha-email"]
