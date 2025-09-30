@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Show Selected Action
         run: |
-          echo "### 🚀 Terraform Pipeline Starting" >> $GITHUB_STEP_SUMMARY
+          echo "### Terraform Pipeline Starting" >> $GITHUB_STEP_SUMMARY
           echo "Triggered by: ${{ github.triggering_actor }}" >> $GITHUB_STEP_SUMMARY
           echo "Event: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -41,7 +41,7 @@ jobs:
           fi
 
   # -------------------------
-  # VALIDATE (always safe)
+  # VALIDATE
   # -------------------------
   terraform-validate:
     name: Terraform Validate
@@ -57,11 +57,11 @@ jobs:
         run: terraform init -backend=false
       - name: Validate Terraform
         run: terraform validate
-      - name: ✅ Validation Summary
+      - name: Validation Summary
         run: echo "Terraform configuration validated successfully." >> $GITHUB_STEP_SUMMARY
 
   # -------------------------
-  # PLAN FOR PRs (dummy backend, no secrets)
+  # PLAN FOR PRs
   # -------------------------
   terraform-plan-pr:
     name: Terraform Plan (PR - Dummy Backend)
@@ -92,7 +92,7 @@ jobs:
             });
 
   # -------------------------
-  # PLAN FOR MAIN (real backend, secrets)
+  # PLAN FOR MAIN
   # -------------------------
   terraform-plan-main:
     name: Terraform Plan (Main - Real Backend)
@@ -137,7 +137,7 @@ jobs:
         run: cat plan_output.txt >> $GITHUB_STEP_SUMMARY
 
   # -------------------------
-  # APPLY (only on main, gated)
+  # APPLY
   # -------------------------
   terraform-apply:
     name: Terraform Apply
@@ -153,7 +153,7 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      TF_VAR_admin_password: ${{ secrets.ADMIN_PASSWORD }}
+      TF_VAR_admin_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4

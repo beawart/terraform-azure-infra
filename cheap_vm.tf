@@ -41,8 +41,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
     azurerm_network_interface.nic.id
   ]
 
-  admin_password = var.admin_password
-
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
@@ -56,4 +54,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
   priority        = "Spot"       # Enables Spot pricing
   eviction_policy = "Deallocate" # VM is stopped when evicted
+
+  admin_ssh_key {
+    username   = "azureuser"
+    public_key = var.admin_ssh_public_key
+  }
 }
