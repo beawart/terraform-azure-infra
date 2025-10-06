@@ -34,7 +34,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = "cheap-linux-vm"
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  size                = "B1s" # Cheapest burstable size
+  size                = "Standard_B1ls" # Cheapest burstable size
   admin_username      = "azureuser"
 
   network_interface_ids = [
