@@ -5,7 +5,7 @@ module "baseline_health_alerts-StorageAccount" {
     "/subscriptions/${var.subscription_id}/resourceGroups/tfstate-rg/providers/Microsoft.Storage/storageAccounts/tfstateaccountbeawart"
   ]
   resource_type    = "storage_account"
-  action_group_ids = ["/subscriptions/secrets.AZURE_SUBSCRIPTION_ID/resourceGroups/tfstate-rg/providers/microsoft.insights/actiongroups/ag-taha-email"]
+  action_group_ids = ["/subscriptions/${var.subscription_id}/resourceGroups/tfstate-rg/providers/microsoft.insights/actiongroups/ag-taha-email"]
   tags             = { environment = "prod" }
 
   alerts_overrides = {
