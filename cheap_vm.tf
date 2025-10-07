@@ -1,7 +1,7 @@
 
 resource "azurerm_resource_group" "rg" {
   name     = "cheap-vm-rg"
-  location = "Central India" # Cheapest region as of Sep 2025
+  location = "Australia East" # Cheapest region as of Sep 2025
 }
 
 resource "azurerm_virtual_network" "vnet" {
