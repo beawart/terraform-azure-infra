@@ -10,12 +10,10 @@ module "baseline_health_alerts-StorageAccount" {
 
   alerts_overrides = {
     used_capacity = {
-      threshold   = 6e+14
-      severity    = 1
-      window_size = "PT12H"
+      enabled = false
     }
     availability = {
-      enabled = true # disable this baseline alert for this deployment
+      enabled = false # disable this baseline alert for this deployment
     }
   }
 }
