@@ -52,7 +52,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     sku       = "20_04-lts"
     version   = "latest"
   }
-  priority        = "Spot"       # Enables Spot pricing
+  # priority        = "Spot"       # Enables Spot pricing
   eviction_policy = "Deallocate" # VM is stopped when evicted
 
   admin_ssh_key {
