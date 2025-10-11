@@ -18,16 +18,16 @@ module "baseline_health_alerts-StorageAccount" {
   }
 }
 
-# module "baseline_health_alerts-VirtualMachine" {
-#   source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/baseline-health"
-#   resource_group_name = "tfstate-rg"
-#   target_resource_ids = [
-#     
-#   ]
-#   resource_type    = "virtual_machine"
-#   action_group_ids = [""]
-#   tags             = { environment = "prod" }
+module "baseline_health_alerts-VirtualMachine" {
+  source              = "git::https://github.com/beawart/azure-monitoring-kit-community.git//modules/baseline-health"
+  resource_group_name = "tfstate-rg"
+  target_resource_ids = [
+    "/subscriptions/${var.subscription_id}/resourceGroups/cheap-vm-rg/providers/Microsoft.Compute/virtualMachines/cheap-linux-vm"
+  ]
+  resource_type    = "virtual_machine"
+  action_group_ids = ["/subscriptions/${var.subscription_id}/resourceGroups/tfstate-rg/providers/microsoft.insights/actiongroups/ag-taha-email"]
+  tags             = { environment = "prod" }
 
-#   alerts_overrides = {
-#   }
-# }
+  alerts_overrides = {
+  }
+}
