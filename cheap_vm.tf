@@ -53,7 +53,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = "latest"
   }
   # priority        = "Spot"       # Enables Spot pricing
-  eviction_policy = "Deallocate" # VM is stopped when evicted
+  # eviction_policy = "Deallocate" # VM is stopped when evicted
 
   admin_ssh_key {
     username   = "azureuser"
